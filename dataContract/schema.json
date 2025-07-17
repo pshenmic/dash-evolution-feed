@@ -1,0 +1,24 @@
+{
+  "posts": {
+    "type": "object",
+    "indices": [
+      {
+        "name": "message",
+        "unique": false,
+        "properties": [
+          {
+            "message": "asc"
+          }
+        ]
+      }
+    ],
+    "properties": {
+      "message": {
+        "type": "string",
+        "position": 0,
+        "maxLength": 63
+      }
+    },
+    "additionalProperties": false
+  }
+}
