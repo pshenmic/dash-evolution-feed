@@ -5,9 +5,11 @@ let dashPlatformSDK: DashPlatformSDK
 
 export const useSdk = () => {
 
-  // if (window.dashPlatformSDK) {
-  //   return window.dashPlatformSDK
-  // }
+  // @ts-ignore
+  if (window.dashPlatformSDK) {
+    // @ts-ignore
+    return window.dashPlatformSDK
+  }
 
   if (!dashPlatformSDK) {
     dashPlatformSDK = new DashPlatformSDK()

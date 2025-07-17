@@ -10,12 +10,14 @@ import {
 declare global {
   interface Window {
     dashPlatformExtension: { signer: AbstractSigner }
+    dashPlatformSdk: DashPlatformSDK
   }
 }
 
 import type { Route } from "./+types/root";
 import "./app.css";
 import type {AbstractSigner} from "dash-platform-sdk/src/signer/AbstractSigner";
+import type {DashPlatformSDK} from "dash-platform-sdk";
 
 export const links: Route.LinksFunction = () => [
   { rel: "preconnect", href: "https://fonts.googleapis.com" },
