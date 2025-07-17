@@ -21,7 +21,7 @@ export function meta() {
   ];
 }
 
-const dataContractId = '5Dh81XnDELMYxPRfN7vyx8SB996vrGhE8oKR88skoPv3'
+const dataContractId = 'DguLeagz1hgqMVCiYq9Gd2f288NpJHWxFK1VPYFAxRAL'
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
@@ -67,7 +67,18 @@ export default function Home() {
 
       const document = await sdk.documents.create(dataContractId, 'posts', data, currentIdentity)
 
-      const identityContractNonce = await sdk.identities.getIdentityContractNonce(currentIdentity, dataContractId)
+      let identityContractNonce
+
+      try {
+        identityContractNonce = await sdk.identities.getIdentityContractNonce(currentIdentity, dataContractId)
+      } catch (e: any) {
+        if (e.toString().startsWith('Error: Could not get identityContractNonce')) {
+          identityContractNonce = 0n
+        } else {
+          throw e
+        }
+      }
+
       const stateTransition = sdk.documents.createStateTransition(document, 0, identityContractNonce + 1n)
 
       await window.dashPlatformExtension.signer.signAndBroadcast(stateTransition)
