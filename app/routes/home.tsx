@@ -21,7 +21,7 @@ export function meta() {
   ];
 }
 
-const dataContractId = 'DguLeagz1hgqMVCiYq9Gd2f288NpJHWxFK1VPYFAxRAL'
+const dataContractId = '5XZSPd87UG9S6xUB9mmk2zi6A5VMonnxdm8HhMv5JBLC'
 
 export default function Home() {
   const [posts, setPosts] = useState([]);
