@@ -21,10 +21,15 @@ export function meta() {
   ];
 }
 
+interface Post {
+  document: DocumentWASM
+  name?: string
+}
+
 const dataContractId = '4P7d1iqwofPA1gFtbEcXiagDnANXAQhX2WZararioX8f'
 
 export default function Home() {
-  const [posts, setPosts] = useState([]);
+  const [posts, setPosts] = useState<Post[]>([]);
   const [currentIdentity, setCurrentIdentity] = useState(null);
   const [newPost, setNewPost] = useState("");
   const [loading, setLoading] = useState(false);
@@ -41,7 +46,24 @@ export default function Home() {
 
     const loadPosts = async () => {
       const documents = await sdk.documents.query(dataContractId, 'posts', undefined, undefined, undefined, undefined, undefined, {contractKnownKeepHistory: true})
-      setPosts(documents)
+
+      const posts = await Promise.all(documents.map(async (document: DocumentWASM) => {
+        const dataContract = 'GWRSAVFMjXx8HpQFaNJMqBV7MBgMK4br5UESsB4S31Ec'
+        const documentType = 'domain'
+        const where = [['records.identity', '=', document.ownerId.base58()]]
+
+        const [record] = await sdk.documents.query(dataContract, documentType, where)
+
+        const name = record ? `${record.properties.label}.${record.properties.parentDomainName}` : null
+
+
+        return {
+          document,
+          name
+        }
+      }))
+
+      setPosts(posts)
     }
 
     loadPosts()
@@ -210,9 +232,9 @@ export default function Home() {
                       <p className="text-gray-400">No posts yet. Be the first to share!</p>
                     </div>
                 ) : (
-                    posts.map((document: DocumentWASM) => (
+                    posts.map((post: Post) => (
                         <article
-                            key={document.id.base58()}
+                            key={post.document.id.base58()}
                             className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-5 hover:bg-gray-900/70 transition-all duration-200"
                         >
                           <div className="flex gap-3">
@@ -221,19 +243,19 @@ export default function Home() {
                             <div className="flex-1">
                               <div className="flex items-center justify-between mb-2">
                                 <div className="flex items-center gap-2">
-                                  <h3 className="font-semibold text-white">{formatAddress(document.ownerId.base58())}</h3>
+                                  <h3 className="font-semibold text-white">{post.name ? post.name : formatAddress(post.document.ownerId.base58())}</h3>
 
-                                  { document.ownerId.base58() === currentIdentity}
+                                  { post.document.ownerId.base58() === currentIdentity}
                                   <span className="text-xs text-gray-500 bg-gray-800/50 px-2 py-0.5 rounded-full">
                               Owner
                             </span>
                                 </div>
                                 <time className="text-sm text-gray-500">
-                                  {formatTimestamp(document.createdAt ?? 0n)}
+                                  {formatTimestamp(post.document.createdAt ?? 0n)}
                                 </time>
                               </div>
 
-                              <p className="text-gray-200 mb-3 whitespace-pre-wrap">{document.properties.message}</p>
+                              <p className="text-gray-200 mb-3 whitespace-pre-wrap">{post.document.properties.message}</p>
 
                               {/* Tags */}
                               {/*{post.tags && post.tags.length > 0 && (*/}
@@ -254,12 +276,12 @@ export default function Home() {
                                 <button
                                     onClick={() => handleStar()}
                                     className={`flex items-center gap-2 text-sm transition-colors ${
-                                        document.properties.starred
+                                        post.document.properties.starred
                                             ? "text-yellow-500"
                                             : "text-gray-400 hover:text-yellow-500"
                                     }`}
                                 >
-                                  {document.properties.starred ? (
+                                  {post.document.properties.starred ? (
                                       <StarIconSolid className="w-5 h-5" />
                                   ) : (
                                       <StarIcon className="w-5 h-5" />
