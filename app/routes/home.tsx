@@ -207,7 +207,7 @@ export default function Home() {
                 {posts.length === 0 ? (
                     <div className="bg-gray-900/50 backdrop-blur-sm border border-gray-800 rounded-2xl p-8 text-center">
                       <SparklesIcon className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                      <p className="text-gray-400">No posts in this category yet. Be the first to share!</p>
+                      <p className="text-gray-400">No posts yet. Be the first to share!</p>
                     </div>
                 ) : (
                     posts.map((document: DocumentWASM) => (
