@@ -6,6 +6,7 @@ import {
   StarIcon,
   ArrowTrendingUpIcon,
   ChatBubbleLeftRightIcon,
+  TrashIcon,
 } from "@heroicons/react/24/outline";
 import { StarIcon as StarIconSolid } from "@heroicons/react/24/solid";
 import { formatDistanceToNow } from "date-fns";
@@ -33,6 +34,7 @@ export default function Home() {
   const [currentIdentity, setCurrentIdentity] = useState(null);
   const [newPost, setNewPost] = useState("");
   const [loading, setLoading] = useState(false);
+  const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState("all");
 
   const sdk = useSdk()
@@ -68,8 +70,6 @@ export default function Home() {
 
     loadPosts()
         .catch((error) => {
-          debugger
-
           console.error(error);
         })
   }, []);
@@ -123,6 +123,32 @@ export default function Home() {
 
   const handleStar = () => {
     console.log('Handle start is not implemented')
+  };
+
+  const handleDelete = (document: DocumentWASM) => {
+    if (!currentIdentity) {
+      return;
+    }
+
+    const deletePost = async () => {
+      try {
+        // Get identity contract nonce
+        const identityContractNonce = await sdk.identities.getIdentityContractNonce(currentIdentity, dataContractId);
+
+        // Create delete transition
+        const stateTransition = sdk.documents.createStateTransition(document, 2, identityContractNonce + 1n);
+
+        // Sign the transition
+        await window.dashPlatformExtension.signer.signAndBroadcast(stateTransition)
+      } catch (error) {
+        console.error('Error deleting post:', error);
+      }
+    }
+
+    deletePost().then(() => {
+      setDeletingPostId(null);
+      window.location.reload()
+    }).catch(error => console.error(error))
   };
 
   const formatTimestamp = (timestamp: bigint) => {
@@ -245,14 +271,27 @@ export default function Home() {
                                 <div className="flex items-center gap-2">
                                   <h3 className="font-semibold text-white">{post.name ? post.name : formatAddress(post.document.ownerId.base58())}</h3>
 
-                                  { post.document.ownerId.base58() === currentIdentity}
-                                  <span className="text-xs text-gray-500 bg-gray-800/50 px-2 py-0.5 rounded-full">
-                              Owner
-                            </span>
+                                  {post.document.ownerId.base58() === currentIdentity && (
+                                    <span className="text-xs text-gray-500 bg-gray-800/50 px-2 py-0.5 rounded-full">
+                                      Owner
+                                    </span>
+                                  )}
                                 </div>
-                                <time className="text-sm text-gray-500">
-                                  {formatTimestamp(post.document.createdAt ?? 0n)}
-                                </time>
+                                <div className="flex items-center gap-2">
+                                  <time className="text-sm text-gray-500">
+                                    {formatTimestamp(post.document.createdAt ?? 0n)}
+                                  </time>
+                                  {post.document.ownerId.base58() === currentIdentity && (
+                                    <button
+                                      onClick={() => handleDelete(post.document)}
+                                      disabled={deletingPostId === post.document.id.base58()}
+                                      className="p-1.5 rounded-lg text-gray-400 hover:text-red-400 hover:bg-gray-800/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                                      title="Delete post"
+                                    >
+                                      <TrashIcon className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                </div>
                               </div>
 
                               <p className="text-gray-200 mb-3 whitespace-pre-wrap">{post.document.properties.message}</p>
