@@ -24,7 +24,7 @@ export function meta() {
 
 interface Post {
   document: DocumentWASM
-  name?: string
+  name: string | null
 }
 
 const dataContractId = '4P7d1iqwofPA1gFtbEcXiagDnANXAQhX2WZararioX8f'
@@ -47,7 +47,7 @@ export default function Home() {
   useEffect(() => {
 
     const loadPosts = async () => {
-      const documents = await sdk.documents.query(dataContractId, 'posts', undefined, undefined, undefined, undefined, undefined, {contractKnownKeepHistory: true})
+      const documents = await sdk.documents.query(dataContractId, 'posts', undefined, undefined, undefined, undefined, undefined)
 
       const posts = await Promise.all(documents.map(async (document: DocumentWASM) => {
         const dataContract = 'GWRSAVFMjXx8HpQFaNJMqBV7MBgMK4br5UESsB4S31Ec'
@@ -89,19 +89,9 @@ export default function Home() {
 
       const document = await sdk.documents.create(dataContractId, 'posts', data, currentIdentity)
 
-      let identityContractNonce
+      const identityContractNonce = await sdk.identities.getIdentityContractNonce(currentIdentity, dataContractId)
 
-      try {
-        identityContractNonce = await sdk.identities.getIdentityContractNonce(currentIdentity, dataContractId)
-      } catch (e: any) {
-        if (e.toString().startsWith('Error: Could not get identityContractNonce')) {
-          identityContractNonce = 0n
-        } else {
-          throw e
-        }
-      }
-
-      const stateTransition = sdk.documents.createStateTransition(document, 0, identityContractNonce + 1n)
+      const stateTransition = sdk.documents.createStateTransition(document, 'create', identityContractNonce + 1n)
 
       await window.dashPlatformExtension.signer.signAndBroadcast(stateTransition)
     }
@@ -136,7 +126,7 @@ export default function Home() {
         const identityContractNonce = await sdk.identities.getIdentityContractNonce(currentIdentity, dataContractId);
 
         // Create delete transition
-        const stateTransition = sdk.documents.createStateTransition(document, 2, identityContractNonce + 1n);
+        const stateTransition = sdk.documents.createStateTransition(document, 'delete', identityContractNonce + 1n);
 
         // Sign the transition
         await window.dashPlatformExtension.signer.signAndBroadcast(stateTransition)
