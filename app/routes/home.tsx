@@ -91,7 +91,7 @@ export default function Home() {
 
       const identityContractNonce = await sdk.identities.getIdentityContractNonce(currentIdentity, dataContractId)
 
-      const stateTransition = sdk.documents.createStateTransition(document, 'create', identityContractNonce + 1n)
+      const stateTransition = sdk.documents.createStateTransition(document, 'create', {identityContractNonce: identityContractNonce + 1n})
 
       await window.dashPlatformExtension.signer.signAndBroadcast(stateTransition)
     }
